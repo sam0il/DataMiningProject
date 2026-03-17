@@ -49,10 +49,38 @@ lightning_df.drop(columns=["date"], inplace=True)
 #lightning_df.to_csv("data/lightning_cleaned.csv", index=False)
 
 positive_negative_df = pd.read_csv("data/positive_negative_strikes.csv")
-print(weather_df.shape)
-print(lightning_df.shape)
-print(positive_negative_df.shape)
+
+#need to coment this because it gives me nan if its stays.Because its already saved and i do the mapping again.
+#positive_negative_df["Discrimination"] = positive_negative_df["Discrimination"].map({
+#    "CG+": 1,
+#    "CG-": 0
+#})
+
+#positive_negative_df.to_csv("data/positive_negative_strikes.csv", index=False)
+#print(positive_negative_df["Discrimination"].unique())
 
 #Will not work since the datasets have diffrent numbers of rows. We will need to align them first before merging! (will use the smallest dataset as the reference for alignment)
-#final_df = pd.concat([weather_df, lightning_df, positive_negative_df], axis=1) #axis=1 means that the concatenation will be done horizontally.
-#print(final_df.head(20));
+n_rows = min(len(weather_df), len(lightning_df), len(positive_negative_df))
+#print(n_rows) from positive_negative_df.
+
+weather_sample = weather_df.sample(n=n_rows, random_state=42).reset_index(drop=True)
+lightning_sample = lightning_df.sample(n=n_rows, random_state=42).reset_index(drop=True)
+positive_sample = positive_negative_df.sample(n=n_rows, random_state=42).reset_index(drop=True)
+
+final_df = pd.concat([weather_sample, lightning_sample, positive_sample], axis=1) #axis=1 means that the concatenation will be done horizontally.
+
+#print(final_df.shape)
+#print(final_df.isna().sum())
+
+#got the final dataset
+final_df.to_csv("data/final_sprite_cleaned_dataset.csv", index=False)
+
+#print(final_df.corr())
+
+#print(weather_df.shape)
+#print(lightning_df.shape)
+#print(positive_negative_df.shape)
+
+
+
+
