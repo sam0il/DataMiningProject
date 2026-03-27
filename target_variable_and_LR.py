@@ -102,10 +102,10 @@ print(confusion_matrix(Y_test, Y_pred_balanced))    # Actual 1   FalseNegative  
                                                    
 
 
-print("\nClassification Report:")
+print("\nClassification Report:"(Y_test, Y_pred, target_names=["Non-Favorable", "Sprite-Favorable"]))
 print(classification_report(Y_test, Y_pred))
 print("\nClassification Report (Balanced):")
-print(classification_report(Y_test, Y_pred_balanced))
+print(classification_report(Y_test, Y_pred_balanced, target_names=["Non-Favorable", "Sprite-Favorable"]))
 
 #this is from claude...
 feature_names = [
