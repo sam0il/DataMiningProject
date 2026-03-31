@@ -25,12 +25,12 @@ final_df["sprite_possibility"] = (
 df = pd.read_csv("data/final_sprite_dataset_withtarget.csv")
 
 X = df[[ 
-   "Precip",
+   #"Precip",
    "MaxTemp",
    "MinTemp",
    "MeanTemp",
    "Snowfall",
-   "Thunder", #also huge factor even bigger than number_strikes which was weird.
+   #"Thunder", #also huge factor even bigger than number_strikes which was weird.
    "Sleet",
    "Hail",
    "Dust/Sand",
@@ -39,9 +39,9 @@ X = df[[
    "Rain",
    "Snow",
    "Glaze",
-   "Fog",
-   "number_of_strikes",
-   "Discrimination" #huge huge factor for the model from 23 false alarms to 179 when removed.
+   "Fog"
+  # "number_of_strikes",
+  # "Discrimination" #huge huge factor for the model from 23 false alarms to 179 when removed.
 ]]
 
 Y = df["sprite_possibility"]
@@ -102,17 +102,13 @@ print(confusion_matrix(Y_test, Y_pred_balanced))    # Actual 1   FalseNegative  
                                                    
 
 
-print("\nClassification Report:"(Y_test, Y_pred, target_names=["Non-Favorable", "Sprite-Favorable"]))
-print(classification_report(Y_test, Y_pred))
+print("\nClassification Report:")
+print(classification_report(Y_test, Y_pred, target_names=["Non-Favorable", "Sprite-Favorable"], zero_division=0));
 print("\nClassification Report (Balanced):")
 print(classification_report(Y_test, Y_pred_balanced, target_names=["Non-Favorable", "Sprite-Favorable"]))
 
 #this is from claude...
-feature_names = [
-    "Precip", "MaxTemp", "MinTemp", "MeanTemp", "Snowfall",
-    "Thunder", "Sleet", "Hail", "Dust/Sand", "Smoke/Haze",
-    "BlowingSnow", "Rain", "Snow", "Glaze", "Fog", "number_of_strikes", "Discrimination"
-]
+feature_names = X.columns.tolist()
 
 importance_df = pd.DataFrame({
     "Feature": feature_names,

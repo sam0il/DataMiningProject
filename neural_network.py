@@ -10,12 +10,12 @@ from sklearn.inspection import permutation_importance
 df = pd.read_csv("data/final_sprite_dataset_withtarget.csv")
 
 X = df[[ 
-   "Precip",
+   #"Precip",
    "MaxTemp",
    "MinTemp",
    "MeanTemp",
    "Snowfall",
-   "Thunder", #also huge factor even bigger than number_strikes which was weird. for model.
+  # "Thunder", #also huge factor even bigger than number_strikes which was weird. for model.
    "Sleet",
    "Hail",
    "Dust/Sand",
@@ -25,8 +25,8 @@ X = df[[
    "Snow",
    "Glaze",
    "Fog",
-   "number_of_strikes",
-   "Discrimination" #from 16 to 65 false alarms. when we remove it it doesn't stop at itteration 32. for model.
+   #"number_of_strikes",
+   #"Discrimination" #from 16 to 65 false alarms. when we remove it it doesn't stop at itteration 32. for model.
 ]]
 
 Y = df["sprite_possibility"]
@@ -62,7 +62,7 @@ model = MLPClassifier(
     activation="relu",#|'relu: if - then 0 else keep', 'identity: turns into linear function', 'logistic: from 0 to 1', 'tanh from -1 to 1'|
     max_iter=500,
     solver="adam", #'lbfgs', 'sgd', 'adam'
-    alpha=0.0001, #regularization, adding a penalty term to the cost function 
+    alpha=0.0001, #regularization, adding a penalty term to the cost function so it doesn't overfit.
     batch_size="auto",
     learning_rate="constant", #|'constant', 'invscaling', 'adaptive'| #need to explain.
     learning_rate_init=0.001,#need to explain.
@@ -86,7 +86,7 @@ model = MLPClassifier(
 model2 = MLPClassifier(
     hidden_layer_sizes=(64, 32),
     activation="relu",
-    max_iter=64,
+    max_iter=500,
     solver="sgd",
     alpha=0.0001,
     batch_size="auto",
@@ -100,9 +100,9 @@ model2 = MLPClassifier(
     nesterovs_momentum=True,
     momentum=0.9,
     #---
-    early_stopping=True,
-    validation_fraction=0.1,
-    n_iter_no_change=10,
+    #early_stopping=True,
+    #validation_fraction=0.1,
+    #n_iter_no_change=10,
     #---
     random_state=42
 
@@ -111,7 +111,7 @@ model2 = MLPClassifier(
 model3 = MLPClassifier(
     hidden_layer_sizes=(64, 32),
     activation="relu",
-    max_iter=64,
+    max_iter=500,
     solver="lbfgs",
     alpha=0.0001,
     #batch_size="auto", ignored by lbfgs
@@ -124,9 +124,9 @@ model3 = MLPClassifier(
 
     max_fun=15000,
     #---
-    early_stopping=True,
-    validation_fraction=0.1,
-    n_iter_no_change=10,
+    #early_stopping=True, ignored by lbfgs
+    #validation_fraction=0.1, ignored by lbfgs
+    #n_iter_no_change=10, ignored by lbfgs
     #---
     random_state=42
 
@@ -135,30 +135,52 @@ model3 = MLPClassifier(
 
 sample_weights = compute_sample_weight(class_weight="balanced", y=Y_train)
 model.fit(X_train_scaled, Y_train, sample_weight=sample_weights)
+model2.fit(X_train_scaled, Y_train, sample_weight=sample_weights)
+model3.fit(X_train_scaled, Y_train, sample_weight=sample_weights)
 
-print("Model trained.")
-print(f"Stopped at iteration: {model.n_iter_}")
+print("Models trained.")
+print(f"Stopped at iteration (Adam): {model.n_iter_}")
+print(f"Stopped at iteration (SGD): {model2.n_iter_}")
+print(f"Stopped at iteration (LBFGS): {model3.n_iter_}")
+
 
 Y_pred = model.predict(X_test_scaled)
+Y_pred2 = model2.predict(X_test_scaled)
+Y_pred3 = model3.predict(X_test_scaled)
 
-print("Accuracy:", accuracy_score(Y_test, Y_pred))
 
-print("\nConfusion Matrix:")
+#Add model2 and model3
+print("Accuracy (Adam):", accuracy_score(Y_test, Y_pred))
+print("Accuracy (SGD):", accuracy_score(Y_test, Y_pred2))
+print("Accuracy (LBFGS):", accuracy_score(Y_test, Y_pred3))
+
+print("\nConfusion Matrix (Adam):")
 print(confusion_matrix(Y_test, Y_pred))
+print("\nConfusion Matrix (SGD):")
+print(confusion_matrix(Y_test, Y_pred2))
+print("\nConfusion Matrix (LBFGS):")
+print(confusion_matrix(Y_test, Y_pred3))
 
-print("\nClassification Report:")
+print("\nClassification Report (Adam):")
 print(classification_report(Y_test, Y_pred, target_names=["Non-Favorable", "Sprite-Favorable"]))
+print("\nClassification Report (SGD):")
+print(classification_report(Y_test, Y_pred2, target_names=["Non-Favorable", "Sprite-Favorable"]))
+print("\nClassification Report (LBFGS):")
+print(classification_report(Y_test, Y_pred3, target_names=["Non-Favorable", "Sprite-Favorable"]))
 
-result = permutation_importance(
-    model, X_test_scaled, Y_test,
-    n_repeats=10,      # shuffle each feature 10 times and average the result
-    random_state=42
-)
 
-importance_df = pd.DataFrame({
-    "Feature": X.columns.tolist(),
-    "Importance": result.importances_mean
-}).sort_values("Importance", ascending=False)
 
-print("\nFeature Importance (Permutation-Based):")
-print(importance_df.to_string(index=False))
+
+for mdl, name in [(model, "Adam"), (model2, "SGD"), (model3, "LBFGS")]:
+    result = permutation_importance(
+        mdl, X_test_scaled, Y_test,
+        n_repeats=10,
+        random_state=42
+    )
+    importance_df = pd.DataFrame({
+        "Feature": X.columns.tolist(),
+        "Importance": result.importances_mean
+    }).sort_values("Importance", ascending=False)
+
+    print(f"\nFeature Importance ({name}):")
+    print(importance_df.to_string(index=False))
