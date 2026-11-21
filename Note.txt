@@ -1,3 +1,2 @@
 During development, the project grew a bit beyond the original proposal 
 (an extra dataset and a comparison of three neural network optimizers instead of one)
-so I'm attaching both the original project proposal and the updated proposal.
